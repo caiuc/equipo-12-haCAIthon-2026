@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Footer } from "@/components/Footer";
+import { LandingHero } from "@/components/LandingHero";
 import { TabRail, tabs } from "@/components/TabRail";
 import { CreditTab } from "@/components/tabs/CreditTab";
 import { DebtTab } from "@/components/tabs/DebtTab";
@@ -13,21 +14,16 @@ import {
   initialDebtState,
   initialInvestmentState,
   mockInsights,
+  presets,
 } from "@/lib/mockData";
 import type { ActiveTab, AIStatus, CreditState, DebtState, InvestmentState } from "@/lib/types";
-
-/*
- * The preset/scenario picker is built but not mounted. To bring it back:
- * render <PresetSelector presets={presets} activePresetId={id} onSelect={fn} />
- * above the calculator container — see components/PresetSelector.tsx and the
- * `presets` export in lib/mockData.ts.
- */
 
 /** How long the placeholder "analysis" spends in the loading state. */
 const MOCK_ANALYSIS_MS = 1400;
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("credit");
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
 
   // One state object per calculator, held here so switching tabs preserves
   // whatever the user already entered. Values are never copied between tabs.
@@ -42,6 +38,7 @@ export default function HomePage() {
   });
 
   const timers = useRef<Partial<Record<ActiveTab, ReturnType<typeof setTimeout>>>>({});
+  const simulatorRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const pending = timers.current;
@@ -68,16 +65,56 @@ export default function HomePage() {
   }, []);
 
   const updateCredit = useCallback((patch: Partial<CreditState>) => {
+    setActivePresetId(null);
     setCreditState((prev) => ({ ...prev, ...patch }));
   }, []);
 
   const updateDebt = useCallback((patch: Partial<DebtState>) => {
+    setActivePresetId(null);
     setDebtState((prev) => ({ ...prev, ...patch }));
   }, []);
 
   const updateInvestment = useCallback((patch: Partial<InvestmentState>) => {
+    setActivePresetId(null);
     setInvestmentState((prev) => ({ ...prev, ...patch }));
   }, []);
+
+  const scrollToSimulator = useCallback(() => {
+    simulatorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handlePresetSelect = useCallback(
+    (presetId: string) => {
+      const preset = presets.find((candidate) => candidate.id === presetId);
+      if (!preset) return;
+
+      const pending = timers.current[preset.tab];
+      if (pending) clearTimeout(pending);
+
+      setActiveTab(preset.tab);
+      setActivePresetId(preset.id);
+      setAiStatus((prev) => ({ ...prev, [preset.tab]: "idle" }));
+
+      if (preset.credit) {
+        setCreditState((prev) => ({ ...prev, ...preset.credit }));
+      }
+
+      if (preset.debt) {
+        setDebtState((prev) => ({
+          ...prev,
+          ...preset.debt,
+          ...(preset.id === "overIndebted" ? { strategy: "snowball" } : {}),
+        }));
+      }
+
+      if (preset.investment) {
+        setInvestmentState((prev) => ({ ...prev, ...preset.investment }));
+      }
+
+      requestAnimationFrame(scrollToSimulator);
+    },
+    [scrollToSimulator],
+  );
 
   const status = aiStatus[activeTab];
   const insight = status === "fallback" ? fallbackInsight : mockInsights[activeTab];
@@ -98,35 +135,57 @@ export default function HomePage() {
 
       <div className="flex min-w-0 flex-1 flex-col lg:overflow-y-auto">
         <main className="flex-1 p-5 sm:p-7 lg:p-9">
-          {activeTab === "credit" ? (
-            <CreditTab
-              state={creditState}
-              onChange={updateCredit}
-              aiStatus={status}
-              insight={insight}
-              onAnalyze={analyze}
-            />
-          ) : null}
+          <LandingHero
+            activePresetId={activePresetId}
+            onGoToSimulator={scrollToSimulator}
+            onPresetSelect={handlePresetSelect}
+          />
 
-          {activeTab === "debt" ? (
-            <DebtTab
-              state={debtState}
-              onChange={updateDebt}
-              aiStatus={status}
-              insight={insight}
-              onAnalyze={analyze}
-            />
-          ) : null}
+          <section
+            ref={simulatorRef}
+            id="simulador"
+            aria-label="Simulador financiero interactivo"
+            className="scroll-mt-6 border-t-4 border-line pt-14 sm:pt-16"
+          >
+            <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+              <span className="pixel pixel-sm pixel-flat pixel-magenta px-3 py-2 font-pixel text-[9px] uppercase leading-relaxed text-white">
+                Zona interactiva
+              </span>
+              <p className="text-xs font-extrabold text-ink-secondary">
+                Ajusta los controles · Compara el resultado · Pide tu análisis
+              </p>
+            </div>
 
-          {activeTab === "investment" ? (
-            <InvestmentTab
-              state={investmentState}
-              onChange={updateInvestment}
-              aiStatus={status}
-              insight={insight}
-              onAnalyze={analyze}
-            />
-          ) : null}
+            {activeTab === "credit" ? (
+              <CreditTab
+                state={creditState}
+                onChange={updateCredit}
+                aiStatus={status}
+                insight={insight}
+                onAnalyze={analyze}
+              />
+            ) : null}
+
+            {activeTab === "debt" ? (
+              <DebtTab
+                state={debtState}
+                onChange={updateDebt}
+                aiStatus={status}
+                insight={insight}
+                onAnalyze={analyze}
+              />
+            ) : null}
+
+            {activeTab === "investment" ? (
+              <InvestmentTab
+                state={investmentState}
+                onChange={updateInvestment}
+                aiStatus={status}
+                insight={insight}
+                onAnalyze={analyze}
+              />
+            ) : null}
+          </section>
         </main>
 
         <Footer />
