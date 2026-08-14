@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FinPath — Elige Pilar</title>
+  <link rel="stylesheet" href="styles.css">
+  <!--
+    Front-end mockup móvil-first para la pantalla "Elige Pilar".
+    Usa Fredoka.ttf (colocar en la misma carpeta: design/Fredoka.ttf)
+    Iconos esperados en design/icons/: credit.svg, debt.svg, invest.svg, home.svg, graph.svg
+
+    NOTAS para desarrolladores:
+    - Este es sólo el front-end. Las tarjetas y los iconos disparan eventos JS que deben
+      conectarse a la navegación/handlers del proyecto (ver app.js).
+    - Si se integra en un framework (Next/React), convertir los elementos <a> en <Link>
+      y usar los data-* attributes para enrutar.
+  -->
+</head>
+<body>
+  <main class="screen">
+    <h1 class="title">Elige Pilar</h1>
+
+    <section class="cards" role="list" aria-label="Pilares">
+      <a href="#" class="card" role="listitem" data-type="credit" aria-label="Crédito">
+        <div class="card-top">
+          <img src="icons/credit.svg" alt="Icono crédito" class="card-icon" />
+        </div>
+        <div class="card-bottom">Crédito</div>
+      </a>
+
+      <a href="#" class="card" role="listitem" data-type="debt" aria-label="Deuda">
+        <div class="card-top">
+          <img src="icons/debt.svg" alt="Icono deuda" class="card-icon" />
+        </div>
+        <div class="card-bottom">Deuda</div>
+      </a>
+
+      <a href="#" class="card" role="listitem" data-type="invest" aria-label="Inversión">
+        <div class="card-top">
+          <img src="icons/invest.svg" alt="Icono inversión" class="card-icon" />
+        </div>
+        <div class="card-bottom">Inversión</div>
+      </a>
+    </section>
+
+    <!-- Barra inferior tipo pill -->
+    <nav class="bottom-nav" aria-label="Navegación principal">
+      <a href="#" class="nav-btn" data-action="home" aria-label="Inicio">
+        <img src="icons/home.svg" alt="Inicio" />
+      </a>
+
+      <div class="nav-center-indicator" aria-hidden="true"></div>
+
+      <a href="#" class="nav-btn" data-action="graph" aria-label="Gráficos">
+        <img src="icons/graph.svg" alt="Gráficos" />
+      </a>
+    </nav>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
