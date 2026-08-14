@@ -17,18 +17,35 @@ export async function POST(req: Request) {
     body && typeof body === "object" && "message" in body
       ? (body as { message?: unknown }).message
       : undefined;
+  const financialData =
+    body && typeof body === "object" && "financialData" in body
+      ? (body as { financialData?: unknown }).financialData
+      : undefined;
 
-  if (typeof message !== "string" || !message.trim()) {
+  if (financialData !== undefined && (typeof financialData !== "string" || !financialData.trim())) {
     return NextResponse.json(
-      { error: "Debes enviar una pregunta en el campo message." },
+      { error: "financialData debe ser texto plano con datos financieros." },
+      { status: 400 },
+    );
+  }
+
+  if ((typeof message !== "string" || !message.trim()) && !financialData) {
+    return NextResponse.json(
+      { error: "Debes enviar una pregunta en message o datos en financialData." },
       { status: 400 },
     );
   }
 
   try {
-    const text = await generateStudentResponse(message.trim());
+    const prompt = typeof message === "string" && message.trim()
+      ? message.trim()
+      : "Realiza mi evaluación financiera inicial con los datos proporcionados.";
+    const response = await generateStudentResponse(
+      prompt,
+      typeof financialData === "string" ? financialData.trim() : undefined,
+    );
 
-    return NextResponse.json({ text });
+    return NextResponse.json(response);
   } catch (error) {
     return NextResponse.json(
       { error: "No fue posible generar una respuesta en este momento." },
