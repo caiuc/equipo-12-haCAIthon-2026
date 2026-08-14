@@ -1,3 +1,5 @@
+import type { Debt } from "@/lib/financial/types";
+
 export type ActiveTab = "credit" | "debt" | "investment";
 
 export type PaymentMode = "minimum" | "accelerated";
@@ -14,15 +16,29 @@ export interface CreditState {
   acceleratedPayment: number;
 }
 
+/**
+ * One row of the debt table. Aliased rather than redeclared so the editor and
+ * the engine can never drift apart — `balance` and `minimumPayment` are CLP,
+ * `monthlyInterestRate` is a percentage (2.5 means 2,5%).
+ */
+export type DebtItem = Debt;
+
 export interface DebtState {
   income: number;
-  totalDebt: number;
   paymentCapacity: number;
   strategy: DebtStrategy;
+  /** Snowball and Avalanche need real per-debt balances and rates to differ. */
+  debts: DebtItem[];
 }
 
+/**
+ * Mirrors `InvestmentPlanInput`: the engine derives the monthly contribution
+ * from income and a share of it, so the tab collects those two directly rather
+ * than asking for an amount and inferring the rest.
+ */
 export interface InvestmentState {
-  monthlySavings: number;
+  monthlyNetIncome: number;
+  investmentAllocationPercent: number;
   years: number;
   returnProfile: ReturnProfile;
 }

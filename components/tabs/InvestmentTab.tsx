@@ -1,16 +1,15 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { AISection } from "@/components/AISection";
 import { CalculatorLayout } from "@/components/CalculatorLayout";
 import { ChartViewer } from "@/components/ui/ChartViewer";
 import { MetricCard, MetricPanel } from "@/components/ui/MetricCard";
+import { NumberField } from "@/components/ui/NumberField";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Slider } from "@/components/ui/Slider";
-import {
-  buildInvestmentChartData,
-  buildInvestmentMetrics,
-  investmentSeries,
-} from "@/lib/mockData";
+import { buildInvestmentView, investmentSeries } from "@/lib/calculators";
 import { formatCLP, formatCompactCLP, formatYears } from "@/lib/format";
 import type { AIInsight, AIStatus, InvestmentState, ReturnProfile } from "@/lib/types";
 
@@ -35,9 +34,9 @@ export function InvestmentTab({
   insight,
   onAnalyze,
 }: InvestmentTabProps) {
-  // Swap these two lines for the real engine output; nothing below changes.
-  const chartData = buildInvestmentChartData(state);
-  const metrics = buildInvestmentMetrics(state);
+  // The engine returns all three return profiles at once; the toggle picks the
+  // one on screen and the 0% run stays as the benchmark behind the hints.
+  const view = useMemo(() => buildInvestmentView(state), [state]);
 
   return (
     <CalculatorLayout
@@ -45,21 +44,45 @@ export function InvestmentTab({
       description="Proyecta lo que podrías acumular ahorrando un monto fijo cada mes."
       controls={
         <>
-          <Slider
-            label="Ahorro Mensual"
-            value={state.monthlySavings}
-            min={10_000}
-            max={300_000}
-            step={5_000}
-            onChange={(monthlySavings) => onChange({ monthlySavings })}
-            formatValue={formatCLP}
-          />
+          {/*
+           * The engine derives the contribution from these two, so they are the
+           * inputs — the resulting amount is shown as a result, not typed in.
+           */}
+          <div>
+            <p className="mb-2.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-ink">
+              Aporte Mensual
+            </p>
+            <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-2.5">
+              <NumberField
+                label="Ingreso líquido"
+                value={state.monthlyNetIncome}
+                min={0}
+                step={10_000}
+                prefix="$"
+                onChange={(monthlyNetIncome) => onChange({ monthlyNetIncome })}
+              />
+              <NumberField
+                label="A invertir"
+                value={state.investmentAllocationPercent}
+                min={0}
+                max={100}
+                step={1}
+                suffix="%"
+                onChange={(investmentAllocationPercent) =>
+                  onChange({ investmentAllocationPercent })
+                }
+              />
+            </div>
+            <p className="mt-1.5 text-xs leading-snug text-ink-muted">
+              El porcentaje de tu ingreso que apartas cada mes.
+            </p>
+          </div>
 
           <Slider
             label="Horizonte"
             value={state.years}
             min={1}
-            max={10}
+            max={40}
             step={1}
             onChange={(years) => onChange({ years })}
             formatValue={formatYears}
@@ -75,7 +98,7 @@ export function InvestmentTab({
       }
       chart={
         <ChartViewer
-          data={chartData}
+          data={view.chartData}
           series={investmentSeries}
           xKey="year"
           xLabel="Año"
@@ -83,12 +106,13 @@ export function InvestmentTab({
           formatValue={formatCLP}
           formatTick={formatCompactCLP}
           title="Aportes y saldo proyectado"
-          subtitle="Valores de ejemplo mientras se conecta el motor de cálculo."
+          subtitle={view.chartSubtitle}
+          notice={view.chartNotice}
         />
       }
       metrics={
         <MetricPanel title="Resultado">
-          {metrics.map((metric) => (
+          {view.metrics.map((metric) => (
             <MetricCard
               key={metric.id}
               label={metric.label}

@@ -29,6 +29,11 @@ interface ChartViewerProps {
   title: string;
   subtitle?: string;
   height?: number;
+  /**
+   * Shown in place of the plot when there is no curve to draw — a scenario that
+   * never amortises has no shape, and an empty axis reads as a broken chart.
+   */
+  notice?: string | null;
 }
 
 /** Recharts reads SVG attributes, so the font has to be named, not classed. */
@@ -74,12 +79,14 @@ export function ChartViewer({
   title,
   subtitle,
   height = 300,
+  notice = null,
 }: ChartViewerProps) {
   const gradientId = useId();
   const last = data[data.length - 1];
   // Square markers are 9px; past roughly this many points they start to merge
   // into the line, and the line alone carries the shape better.
   const showDots = data.length <= 14;
+  const empty = notice !== null || data.length === 0;
 
   return (
     <figure className="pixel pixel-white m-0 p-5">
@@ -90,6 +97,17 @@ export function ChartViewer({
         ) : null}
       </figcaption>
 
+      {empty ? (
+        <div
+          className="mt-3 flex w-full items-center justify-center px-6"
+          style={{ height }}
+        >
+          <p className="max-w-[36ch] text-center text-sm font-semibold leading-relaxed text-ink-muted">
+            {notice ?? "No hay datos para graficar."}
+          </p>
+        </div>
+      ) : (
+        <>
       {/*
        * Legend for two or more series only. With a single series the title
        * already names what is plotted, so a one-swatch box just repeats it.
@@ -247,6 +265,8 @@ export function ChartViewer({
           </table>
         </div>
       </details>
+        </>
+      )}
     </figure>
   );
 }
