@@ -1,27 +1,19 @@
-import { chartColors } from "@/lib/theme";
-import { formatCLP, formatMonths } from "@/lib/format";
 import type {
   AIInsight,
   ActiveTab,
-  ChartPoint,
-  ChartSeries,
   CreditState,
   DebtState,
   InvestmentState,
-  Metric,
   Preset,
 } from "@/lib/types";
 
 /* ------------------------------------------------------------------ *
- * PLACEHOLDER DATA — no financial engine lives here.
+ * Starting values, scenarios and AI placeholders.
  *
- * Every builder below reshapes a canned curve or scales a canned number so
- * the UI reacts while you drag a slider. None of it amortises a balance,
- * applies an interest rate, or compounds anything.
- *
- * To wire up the real thing: replace the bodies of the build* functions with
- * calls into lib/mathEngine.ts. The signatures are already what the tabs
- * consume, so no component needs to change.
+ * The financial math is NOT here: every number the calculators display comes
+ * out of lib/mathEngine.ts through the adapters in lib/calculators.ts. What
+ * remains in this file is the seed state each tab opens with plus the canned
+ * Gemini copy, which is still a placeholder.
  * ------------------------------------------------------------------ */
 
 export const initialCreditState: CreditState = {
@@ -31,185 +23,46 @@ export const initialCreditState: CreditState = {
   acceleratedPayment: 50_000,
 };
 
+/*
+ * Three debts with deliberately different orderings by balance and by rate —
+ * the smallest balance is not the most expensive one — so Snowball and
+ * Avalanche pay them off in a different order out of the box.
+ */
 export const initialDebtState: DebtState = {
   income: 650_000,
-  totalDebt: 1_200_000,
   paymentCapacity: 80_000,
   strategy: "snowball",
+  debts: [
+    {
+      id: "tarjeta",
+      name: "Tarjeta de crédito",
+      balance: 450_000,
+      monthlyInterestRate: 3.4,
+      minimumPayment: 25_000,
+    },
+    {
+      id: "consumo",
+      name: "Crédito de consumo",
+      balance: 600_000,
+      monthlyInterestRate: 1.8,
+      minimumPayment: 35_000,
+    },
+    {
+      id: "avance",
+      name: "Avance en efectivo",
+      balance: 150_000,
+      monthlyInterestRate: 2.5,
+      minimumPayment: 12_000,
+    },
+  ],
 };
 
 export const initialInvestmentState: InvestmentState = {
-  monthlySavings: 40_000,
+  monthlyNetIncome: 500_000,
+  investmentAllocationPercent: 8,
   years: 3,
   returnProfile: 5,
 };
-
-/* ---------------------------------- Crédito ---------------------------------- */
-
-export const creditSeries: ChartSeries[] = [
-  { key: "balance", label: "Saldo de la tarjeta", color: chartColors.series1 },
-];
-
-/** Canned payoff shapes: [month, share of the starting balance still owed]. */
-const CREDIT_SHAPE = {
-  minimum: [
-    [0, 1],
-    [6, 0.86],
-    [12, 0.68],
-    [18, 0.44],
-    [24, 0],
-  ],
-  accelerated: [
-    [0, 1],
-    [4, 0.63],
-    [8, 0.29],
-    [12, 0],
-  ],
-} as const;
-
-export function buildCreditChartData(state: CreditState): ChartPoint[] {
-  return CREDIT_SHAPE[state.paymentMode].map(([month, share]) => ({
-    month,
-    balance: Math.round(state.debt * share),
-  }));
-}
-
-/** Canned result numbers, scaled so the cards track the slider. */
-export function buildCreditMetrics(state: CreditState): Metric[] {
-  const scale = state.debt / initialCreditState.debt;
-  const isMinimum = state.paymentMode === "minimum";
-  const months = isMinimum ? 24 : 12;
-  const interest = Math.round((isMinimum ? 120_000 : 58_000) * scale);
-  const total = Math.round((isMinimum ? 620_000 : 558_000) * scale);
-
-  return [
-    {
-      id: "months",
-      label: "Tiempo estimado",
-      value: formatMonths(months),
-      hint: isMinimum ? "Pagando el mínimo" : "Con pago acelerado",
-    },
-    { id: "interest", label: "Intereses", value: formatCLP(interest), hint: "Costo del crédito" },
-    { id: "total", label: "Total pagado", value: formatCLP(total), hint: "Deuda + intereses" },
-  ];
-}
-
-/* ----------------------------------- Deuda ----------------------------------- */
-
-export const debtSeries: ChartSeries[] = [
-  { key: "debt", label: "Deuda pendiente", color: chartColors.series1 },
-];
-
-/** Canned payoff shapes per strategy: [progress 0-1, share still owed]. */
-const DEBT_SHAPE = {
-  snowball: [
-    [0, 1],
-    [0.25, 0.79],
-    [0.5, 0.56],
-    [0.75, 0.29],
-    [1, 0],
-  ],
-  avalanche: [
-    [0, 1],
-    [0.25, 0.83],
-    [0.5, 0.59],
-    [0.75, 0.28],
-    [1, 0],
-  ],
-} as const;
-
-/** Canned horizon buckets — a lookup table, not a payoff calculation. */
-function mockDebtMonths(capacity: number): number {
-  if (capacity >= 200_000) return 12;
-  if (capacity >= 120_000) return 18;
-  if (capacity >= 60_000) return 24;
-  return 36;
-}
-
-export function buildDebtChartData(state: DebtState): ChartPoint[] {
-  const months = mockDebtMonths(state.paymentCapacity);
-  return DEBT_SHAPE[state.strategy].map(([progress, share]) => ({
-    month: Math.round(months * progress),
-    debt: Math.round(state.totalDebt * share),
-  }));
-}
-
-export function buildDebtMetrics(state: DebtState): Metric[] {
-  const months = mockDebtMonths(state.paymentCapacity);
-  const shareOfIncome = Math.round((state.paymentCapacity / state.income) * 100);
-
-  return [
-    {
-      id: "months",
-      label: "Meses restantes",
-      value: formatMonths(months),
-      hint: state.strategy === "snowball" ? "Estrategia bola de nieve" : "Estrategia avalancha",
-    },
-    {
-      id: "payment",
-      label: "Pago mensual",
-      value: formatCLP(state.paymentCapacity),
-      hint: `${shareOfIncome}% de tu ingreso`,
-    },
-    {
-      id: "remaining",
-      label: "Deuda restante",
-      value: formatCLP(state.totalDebt),
-      hint: "Saldo actual",
-    },
-  ];
-}
-
-/* --------------------------------- Inversión --------------------------------- */
-
-export const investmentSeries: ChartSeries[] = [
-  { key: "balance", label: "Saldo estimado", color: chartColors.series1 },
-  { key: "contributions", label: "Total aportado", color: chartColors.series2 },
-];
-
-/**
- * Canned uplift factors indexed by year — a hand-picked lookup table used to
- * separate the two lines on screen. This is not compound interest.
- */
-const MOCK_UPLIFT: Record<number, number[]> = {
-  0: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  5: [1, 1.04, 1.08, 1.13, 1.18, 1.23, 1.29, 1.35, 1.41, 1.47, 1.54],
-  9: [1, 1.07, 1.16, 1.25, 1.35, 1.46, 1.58, 1.71, 1.85, 2.0, 2.17],
-};
-
-export function buildInvestmentChartData(state: InvestmentState): ChartPoint[] {
-  const uplift = MOCK_UPLIFT[state.returnProfile] ?? MOCK_UPLIFT[0];
-
-  return Array.from({ length: state.years + 1 }, (_, year) => {
-    const contributions = state.monthlySavings * 12 * year;
-    return {
-      year,
-      contributions,
-      balance: Math.round(contributions * (uplift[year] ?? 1)),
-    };
-  });
-}
-
-export function buildInvestmentMetrics(state: InvestmentState): Metric[] {
-  const points = buildInvestmentChartData(state);
-  const last = points[points.length - 1];
-
-  return [
-    {
-      id: "contributed",
-      label: "Total aportado",
-      value: formatCLP(last.contributions),
-      hint: "Lo que sale de tu bolsillo",
-    },
-    {
-      id: "gain",
-      label: "Ganancia estimada",
-      value: formatCLP(last.balance - last.contributions),
-      hint: `Perfil ${state.returnProfile}%`,
-    },
-    { id: "final", label: "Saldo final", value: formatCLP(last.balance), hint: "Al cierre del horizonte" },
-  ];
-}
 
 /* --------------------------------- Presets ----------------------------------- */
 
@@ -226,14 +79,46 @@ export const presets: Preset[] = [
     label: "Endeudado",
     description: "Varias deudas y poca holgura mensual",
     tab: "debt",
-    debt: { income: 650_000, totalDebt: 2_400_000, paymentCapacity: 120_000, strategy: "avalanche" },
+    debt: {
+      income: 650_000,
+      paymentCapacity: 120_000,
+      strategy: "avalanche",
+      debts: [
+        {
+          id: "tarjeta",
+          name: "Tarjeta de crédito",
+          balance: 1_100_000,
+          monthlyInterestRate: 3.8,
+          minimumPayment: 55_000,
+        },
+        {
+          id: "consumo",
+          name: "Crédito de consumo",
+          balance: 1_000_000,
+          monthlyInterestRate: 2.1,
+          minimumPayment: 45_000,
+        },
+        {
+          id: "retail",
+          name: "Tarjeta de retail",
+          balance: 300_000,
+          monthlyInterestRate: 2.9,
+          minimumPayment: 18_000,
+        },
+      ],
+    },
   },
   {
     id: "firstSaver",
     label: "Primer Ahorrante",
     description: "Empieza a invertir con montos pequeños",
     tab: "investment",
-    investment: { monthlySavings: 60_000, years: 5, returnProfile: 5 },
+    investment: {
+      monthlyNetIncome: 600_000,
+      investmentAllocationPercent: 10,
+      years: 5,
+      returnProfile: 5,
+    },
   },
 ];
 

@@ -1,12 +1,14 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { AISection } from "@/components/AISection";
 import { CalculatorLayout } from "@/components/CalculatorLayout";
 import { ChartViewer } from "@/components/ui/ChartViewer";
 import { MetricCard, MetricPanel } from "@/components/ui/MetricCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Slider } from "@/components/ui/Slider";
-import { buildCreditChartData, buildCreditMetrics, creditSeries } from "@/lib/mockData";
+import { buildCreditView, creditSeries } from "@/lib/calculators";
 import { formatCLP, formatCompactCLP, formatPercent } from "@/lib/format";
 import type { AIInsight, AIStatus, CreditState, PaymentMode } from "@/lib/types";
 
@@ -24,9 +26,8 @@ const PAYMENT_MODES = [
 ];
 
 export function CreditTab({ state, onChange, aiStatus, insight, onAnalyze }: CreditTabProps) {
-  // Swap these two lines for the real engine output; nothing below changes.
-  const chartData = buildCreditChartData(state);
-  const metrics = buildCreditMetrics(state);
+  // One amortisation run per state change feeds both the chart and the cards.
+  const view = useMemo(() => buildCreditView(state), [state]);
 
   return (
     <CalculatorLayout
@@ -77,7 +78,7 @@ export function CreditTab({ state, onChange, aiStatus, insight, onAnalyze }: Cre
       }
       chart={
         <ChartViewer
-          data={chartData}
+          data={view.chartData}
           series={creditSeries}
           xKey="month"
           xLabel="Mes"
@@ -85,12 +86,13 @@ export function CreditTab({ state, onChange, aiStatus, insight, onAnalyze }: Cre
           formatValue={formatCLP}
           formatTick={formatCompactCLP}
           title="Saldo de la tarjeta en el tiempo"
-          subtitle="Valores de ejemplo mientras se conecta el motor de cálculo."
+          subtitle={view.chartSubtitle}
+          notice={view.chartNotice}
         />
       }
       metrics={
         <MetricPanel title="Resultado">
-          {metrics.map((metric) => (
+          {view.metrics.map((metric) => (
             <MetricCard
               key={metric.id}
               label={metric.label}
