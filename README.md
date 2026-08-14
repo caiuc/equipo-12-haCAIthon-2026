@@ -52,5 +52,5 @@ lib/                    Tipos, cálculos, sanitización y fallback futuros
 
 Las bases originales del evento se conservan en [README.hackathon.md](README.hackathon.md).
 
-El contrato de las rutas para credito, deudas e inversion esta documentado en
-[docs/API.md](docs/API.md).
+El contrato del motor centralizado de crédito, deudas e inversión está
+documentado en [docs/FINANCIAL_ENGINE.md](docs/FINANCIAL_ENGINE.md).

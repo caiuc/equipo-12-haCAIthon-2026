@@ -1,4 +1,4 @@
-// Public contracts shared by the financial engines, API routes, and UI.
+// Public contracts shared by the financial engines and UI.
 
 export type CreditPaymentMode = "minimum" | "accelerated";
 
@@ -37,14 +37,6 @@ export interface CreditSimulationResult {
 export interface CreditComparison {
   minimum: CreditSimulationResult;
   accelerated: CreditSimulationResult;
-}
-
-export interface CreditApiResult extends CreditComparison {
-  monthlyInterestRatePercent: number;
-  comparison: {
-    interestDifference: number | null;
-    monthsDifference: number | null;
-  };
 }
 
 export type DebtStrategy = "snowball" | "avalanche";

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "tsx --test lib/financial/financial.test.ts app/api/financial/financial-api.test.ts"
+    "test": "tsx --test lib/financial/financial.test.ts lib/mathEngine.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.17.1",
