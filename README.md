@@ -9,13 +9,13 @@ El repositorio contiene el esqueleto técnico; aún no incluye lógica financier
 ## Requisitos
 
 - Node.js 22+
-- pnpm 10+
+- npm 10+
 
 ## Inicio
 
 ```bash
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
 La aplicación queda disponible en `http://localhost:3000`.
@@ -23,10 +23,10 @@ La aplicación queda disponible en `http://localhost:3000`.
 ## Scripts
 
 ```bash
-pnpm dev
-pnpm build
-pnpm start
-pnpm lint
+npm run dev
+npm run build
+npm run start
+npm run lint
 ```
 
 ## Estructura
@@ -51,3 +51,6 @@ lib/                    Tipos, cálculos, sanitización y fallback futuros
 - Google Generative AI SDK
 
 Las bases originales del evento se conservan en [README.hackathon.md](README.hackathon.md).
+
+El contrato del motor centralizado de crédito, deudas e inversión está
+documentado en [docs/FINANCIAL_ENGINE.md](docs/FINANCIAL_ENGINE.md).

@@ -2,7 +2,7 @@
 
 ## Current State
 
-- The repository is a Next.js skeleton with `pnpm` scripts in `package.json`; the application logic is intentionally not implemented yet.
+- The repository is a Next.js skeleton with npm scripts in `package.json`; use the committed `package-lock.json` for dependency installs. The application logic is intentionally not implemented yet.
 - Build FinPath AI directly in the repository root, not in a nested `finpath-ai/` directory.
 
 ## Product Constraints
