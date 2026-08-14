@@ -9,13 +9,13 @@ El repositorio contiene el esqueleto técnico; aún no incluye lógica financier
 ## Requisitos
 
 - Node.js 22+
-- pnpm 10+
+- npm 10+
 
 ## Inicio
 
 ```bash
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
 La aplicación queda disponible en `http://localhost:3000`.
@@ -23,10 +23,10 @@ La aplicación queda disponible en `http://localhost:3000`.
 ## Scripts
 
 ```bash
-pnpm dev
-pnpm build
-pnpm start
-pnpm lint
+npm run dev
+npm run build
+npm run start
+npm run lint
 ```
 
 ## Estructura
