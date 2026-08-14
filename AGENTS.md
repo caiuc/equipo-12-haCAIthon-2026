@@ -2,7 +2,7 @@
 
 ## Current State
 
-- The repository currently has no application, manifest, lockfile, CI, or executable scripts; do not assume a package manager or invent build/test commands. Re-check the root before scaffolding because this is expected to change quickly during the hackathon.
+- The repository is a Next.js skeleton with `pnpm` scripts in `package.json`; the application logic is intentionally not implemented yet.
 - Build FinPath AI directly in the repository root, not in a nested `finpath-ai/` directory.
 
 ## Product Constraints
@@ -17,4 +17,4 @@
 
 - Preserve a root-level OSI license. The existing `LICENSE` is MIT and already satisfies the requirement.
 - Declare third-party libraries, APIs, and assets in project documentation and respect their licenses; the event rules explicitly require this.
-- Keep the app exhibition-ready and favor a reliable offline/fallback demo path over infrastructure. The authoritative event constraints are in `README.md`, especially sections 10-13.
+- Keep the app exhibition-ready and favor a reliable offline/fallback demo path over infrastructure. The original event rules are preserved in `README.hackathon.md`, especially sections 10-13.
