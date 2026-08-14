@@ -31,6 +31,38 @@ interface ChartViewerProps {
   height?: number;
 }
 
+/** Recharts reads SVG attributes, so the font has to be named, not classed. */
+const SCORE_FONT = "var(--font-score), monospace";
+
+interface PixelDotProps {
+  /** Injected by Recharts. */
+  cx?: number;
+  cy?: number;
+  /**
+   * Deliberately not called `fill`: Recharts clones this element with the
+   * Area's own `fill` (a gradient url), which would overwrite that prop.
+   */
+  markColor: string;
+  size?: number;
+}
+
+/** Square, ink-outlined marker — a round dot reads as the wrong toolkit here. */
+function PixelDot({ cx, cy, markColor, size = 9 }: PixelDotProps) {
+  if (cx == null || cy == null) return null;
+  return (
+    <rect
+      x={cx - size / 2}
+      y={cy - size / 2}
+      width={size}
+      height={size}
+      fill={markColor}
+      stroke={chartChrome.surface}
+      strokeWidth={2.5}
+      shapeRendering="crispEdges"
+    />
+  );
+}
+
 export function ChartViewer({
   data,
   series,
@@ -45,12 +77,17 @@ export function ChartViewer({
 }: ChartViewerProps) {
   const gradientId = useId();
   const last = data[data.length - 1];
+  // Square markers are 9px; past roughly this many points they start to merge
+  // into the line, and the line alone carries the shape better.
+  const showDots = data.length <= 14;
 
   return (
-    <figure className="m-0 rounded-card border border-line bg-surface p-5 shadow-card">
+    <figure className="pixel pixel-white m-0 p-5">
       <figcaption>
-        <h3 className="text-sm font-semibold text-ink">{title}</h3>
-        {subtitle ? <p className="mt-0.5 text-xs text-ink-muted">{subtitle}</p> : null}
+        <h3 className="font-pixel text-[11px] uppercase leading-[1.5] text-ink">{title}</h3>
+        {subtitle ? (
+          <p className="mt-2 text-xs font-semibold leading-snug text-ink-muted">{subtitle}</p>
+        ) : null}
       </figcaption>
 
       {/*
@@ -60,17 +97,18 @@ export function ChartViewer({
        * cannot collide with the marks the way end-of-line labels would.
        */}
       {series.length > 1 ? (
-        <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 p-0">
+        <ul className="mt-3.5 flex flex-wrap gap-x-5 gap-y-2 p-0">
           {series.map((item) => (
             <li key={item.key} className="flex items-center gap-2 text-xs">
+              {/* Square swatch with an ink outline — the chart's marks match. */}
               <span
                 aria-hidden="true"
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                className="h-3 w-3 shrink-0 border-2 border-line"
                 style={{ backgroundColor: item.color }}
               />
-              <span className="text-ink-secondary">{item.label}</span>
+              <span className="font-bold text-ink-secondary">{item.label}</span>
               {last ? (
-                <span className="font-semibold tabular-nums text-ink">
+                <span className="font-score text-base leading-none tabular-nums text-ink">
                   {formatValue(last[item.key])}
                 </span>
               ) : null}
@@ -97,16 +135,19 @@ export function ChartViewer({
                   x2="0"
                   y2="1"
                 >
-                  <stop offset="0%" stopColor={item.color} stopOpacity={0.18} />
-                  <stop offset="100%" stopColor={item.color} stopOpacity={0.01} />
+                  <stop offset="0%" stopColor={item.color} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={item.color} stopOpacity={0.04} />
                 </linearGradient>
               ))}
             </defs>
 
+            {/* Dotted rather than solid: on a grid this fine it reads as
+                graph paper instead of a second set of marks. */}
             <CartesianGrid
               vertical={false}
               stroke={chartChrome.grid}
-              strokeWidth={1}
+              strokeWidth={2}
+              strokeDasharray="2 4"
             />
 
             <XAxis
@@ -116,8 +157,8 @@ export function ChartViewer({
               ticks={data.map((point) => point[xKey])}
               tickFormatter={formatX}
               tickLine={false}
-              axisLine={{ stroke: chartChrome.axis }}
-              tick={{ fill: chartChrome.axisText, fontSize: 12 }}
+              axisLine={{ stroke: chartChrome.axis, strokeWidth: 2 }}
+              tick={{ fill: chartChrome.axisText, fontSize: 15, fontFamily: SCORE_FONT }}
               tickMargin={8}
             />
 
@@ -125,12 +166,12 @@ export function ChartViewer({
               tickFormatter={formatTick}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: chartChrome.axisText, fontSize: 12 }}
+              tick={{ fill: chartChrome.axisText, fontSize: 15, fontFamily: SCORE_FONT }}
               width={58}
             />
 
             <Tooltip
-              cursor={{ stroke: chartChrome.axis, strokeWidth: 1 }}
+              cursor={{ stroke: chartChrome.axis, strokeWidth: 2, strokeDasharray: "3 3" }}
               content={
                 <ChartTooltip
                   series={series}
@@ -141,19 +182,25 @@ export function ChartViewer({
               }
             />
 
+            {/*
+             * `linear` rather than `monotone`: straight segments and hard
+             * corners belong to this skin, and the underlying series are
+             * sampled per month or per year anyway — a smoothed curve would
+             * invent readings between them.
+             */}
             {series.map((item) => (
               <Area
                 key={item.key}
-                type="monotone"
+                type="linear"
                 dataKey={item.key}
                 name={item.label}
                 stroke={item.color}
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeWidth={3}
+                strokeLinecap="butt"
+                strokeLinejoin="miter"
                 fill={`url(#${gradientId}-${item.key})`}
-                dot={{ r: 4, fill: item.color, stroke: chartChrome.surface, strokeWidth: 2 }}
-                activeDot={{ r: 6, fill: item.color, stroke: chartChrome.surface, strokeWidth: 2 }}
+                dot={showDots ? <PixelDot markColor={item.color} /> : false}
+                activeDot={<PixelDot markColor={item.color} size={14} />}
                 isAnimationActive={false}
               />
             ))}
@@ -161,32 +208,36 @@ export function ChartViewer({
         </ResponsiveContainer>
       </div>
 
-      <details className="mt-3 border-t border-line pt-3">
-        <summary className="cursor-pointer text-xs font-medium text-ink-secondary hover:text-ink">
+      <details className="mt-4 border-t-4 border-line pt-3.5">
+        <summary className="cursor-pointer font-pixel text-[9px] uppercase leading-none text-ink-secondary hover:text-accent-strong">
           Ver datos
         </summary>
-        <div className="mt-2 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="text-ink-muted">
-                <th scope="col" className="py-1.5 pr-4 font-medium">
+                <th scope="col" className="py-1.5 pr-4 text-[10px] font-extrabold uppercase tracking-wide">
                   {xLabel}
                 </th>
                 {series.map((item) => (
-                  <th key={item.key} scope="col" className="py-1.5 pr-4 font-medium">
+                  <th
+                    key={item.key}
+                    scope="col"
+                    className="py-1.5 pr-4 text-[10px] font-extrabold uppercase tracking-wide"
+                  >
                     {item.label}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="text-ink">
+            <tbody className="font-score text-base text-ink">
               {data.map((point) => (
-                <tr key={point[xKey]} className="border-t border-line">
-                  <th scope="row" className="py-1.5 pr-4 font-normal tabular-nums">
+                <tr key={point[xKey]} className="border-t-2 border-grid">
+                  <th scope="row" className="py-1 pr-4 font-normal tabular-nums">
                     {formatX(point[xKey])}
                   </th>
                   {series.map((item) => (
-                    <td key={item.key} className="py-1.5 pr-4 tabular-nums">
+                    <td key={item.key} className="py-1 pr-4 tabular-nums">
                       {formatValue(point[item.key])}
                     </td>
                   ))}
@@ -228,8 +279,8 @@ function ChartTooltip({
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="rounded-lg border border-line bg-surface px-3 py-2 shadow-raised">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-ink-muted">
+    <div className="pixel pixel-sm pixel-white px-3 py-2">
+      <p className="text-[10px] font-extrabold uppercase tracking-wide text-ink-muted">
         {xLabel} {typeof label === "number" ? formatX(label) : label}
       </p>
       <ul className="mt-1.5 space-y-1 p-0">
@@ -240,11 +291,11 @@ function ChartTooltip({
             <li key={match.key} className="flex items-center gap-2 text-xs">
               <span
                 aria-hidden="true"
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                className="h-3 w-3 shrink-0 border-2 border-line"
                 style={{ backgroundColor: match.color }}
               />
-              <span className="text-ink-secondary">{match.label}</span>
-              <span className="ml-auto font-semibold tabular-nums text-ink">
+              <span className="font-bold text-ink-secondary">{match.label}</span>
+              <span className="ml-auto pl-2 font-score text-base leading-none tabular-nums text-ink">
                 {formatValue(entry.value)}
               </span>
             </li>

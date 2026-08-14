@@ -89,11 +89,15 @@ export default function HomePage() {
      * height, and only the content column scrolls. Under `lg` the rail becomes
      * a horizontal strip and the whole page scrolls normally.
      */
-    <div className="flex min-h-screen flex-col bg-page lg:h-screen lg:flex-row lg:overflow-hidden">
+    /*
+     * No background on the shell: the checkerboard ground is painted on <body>
+     * (globals.css) and a color here would flatten it back out.
+     */
+    <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
       <TabRail tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="flex min-w-0 flex-1 flex-col lg:overflow-y-auto">
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-5 sm:p-7 lg:p-9">
           {activeTab === "credit" ? (
             <CreditTab
               state={creditState}

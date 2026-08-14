@@ -13,20 +13,20 @@ interface DiagnosisCardProps {
  */
 export function DiagnosisCard({ status, diagnosis }: DiagnosisCardProps) {
   return (
-    <div className="rounded-card border border-line bg-surface p-5 shadow-card">
-      <div className="flex items-center gap-2">
-        <h3 className="text-sm font-semibold text-ink">Diagnóstico</h3>
+    <div className="pixel pixel-white p-5">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <h3 className="font-pixel text-[11px] uppercase leading-none text-ink">Diagnóstico</h3>
         <StatusBadge status={status} />
       </div>
 
       {status === "loading" ? (
-        <div className="fp-shimmer mt-3 space-y-2" aria-hidden="true">
-          <div className="h-3 w-full rounded bg-surface-muted" />
-          <div className="h-3 w-11/12 rounded bg-surface-muted" />
-          <div className="h-3 w-8/12 rounded bg-surface-muted" />
+        <div className="fp-shimmer mt-4 space-y-2" aria-hidden="true">
+          <div className="h-3 w-full bg-accent-soft" />
+          <div className="h-3 w-11/12 bg-accent-soft" />
+          <div className="h-3 w-8/12 bg-accent-soft" />
         </div>
       ) : (
-        <p className="mt-3 text-sm leading-relaxed text-ink-secondary">
+        <p className="mt-3.5 text-sm font-semibold leading-relaxed text-ink-secondary">
           {status === "idle"
             ? "Ajusta los controles y pide un análisis para ver una lectura de tu escenario."
             : diagnosis}
@@ -40,19 +40,24 @@ export function DiagnosisCard({ status, diagnosis }: DiagnosisCardProps) {
   );
 }
 
+/**
+ * Status is carried by an icon and a word as well as the tone, so it never
+ * depends on color alone.
+ */
 function StatusBadge({ status }: { status: AIStatus }) {
+  const base =
+    "pixel pixel-sm pixel-flat inline-flex items-center gap-1.5 px-2.5 py-1 font-pixel text-[8px] uppercase leading-none";
+
   if (status === "loading") {
     return (
-      <span className="fp-shimmer inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-strong">
-        Analizando tu escenario...
-      </span>
+      <span className={`${base} pixel-cyan fp-shimmer text-ink`}>Analizando...</span>
     );
   }
 
   if (status === "success") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-strong">
-        <Sparkles size={11} aria-hidden="true" />
+      <span className={`${base} pixel-lime text-ink`}>
+        <Sparkles size={10} aria-hidden="true" strokeWidth={3} />
         Generado con IA
       </span>
     );
@@ -60,9 +65,9 @@ function StatusBadge({ status }: { status: AIStatus }) {
 
   if (status === "fallback") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#fdf3dd] px-2 py-0.5 text-[11px] font-medium text-[#7a5300]">
-        <AlertTriangle size={11} aria-hidden="true" />
-        Contenido de respaldo
+      <span className={`${base} pixel-gold text-ink`}>
+        <AlertTriangle size={10} aria-hidden="true" strokeWidth={3} />
+        Respaldo
       </span>
     );
   }

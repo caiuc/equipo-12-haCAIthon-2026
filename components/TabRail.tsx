@@ -23,19 +23,24 @@ interface TabRailProps {
 }
 
 /**
- * App-shell rail: flush to the left edge, full viewport height, icon stacked
- * over its label. The buttons stay grouped at the top — the empty space below
- * them is intentional. Collapses to a horizontal strip under `lg`.
+ * App-shell rail: flush to the left edge, full viewport height, an arcade
+ * cabinet menu of icon-over-label buttons. The selected tab renders
+ * permanently pressed rather than merely tinted. The buttons stay grouped at
+ * the top — the empty space below them is intentional. Collapses to a
+ * horizontal strip under `lg`.
  */
 export function TabRail({ tabs, activeTab, onTabChange }: TabRailProps) {
   return (
     <nav
       aria-label="Calculadoras"
-      className="flex shrink-0 items-center gap-1 border-b border-line bg-surface px-2 py-2 lg:h-full lg:w-[92px] lg:flex-col lg:items-stretch lg:gap-1 lg:border-b-0 lg:border-r lg:py-3"
+      className="flex shrink-0 items-center gap-2.5 border-b-4 border-line bg-surface-muted px-3 py-3 lg:h-full lg:w-[118px] lg:flex-col lg:items-stretch lg:gap-3 lg:border-b-0 lg:border-r-4 lg:py-5"
     >
-      <span className="shrink-0 px-2 text-sm font-semibold leading-tight text-ink lg:mb-3 lg:px-0 lg:text-center lg:text-xs">
-        FinPath AI
-      </span>
+      {/* Wordmark: one line on the strip, stacked on the rail. Deliberately not
+          a badge — a filled accent square reads as a selected tab down here. */}
+      <div className="flex shrink-0 items-baseline gap-1.5 pr-2 font-pixel text-[10px] uppercase leading-none lg:mb-2 lg:flex-col lg:items-center lg:gap-1.5 lg:border-b-4 lg:border-line lg:pb-4 lg:pr-0 lg:text-[11px]">
+        <span className="text-ink">FinPath</span>
+        <span className="text-accent-strong">AI</span>
+      </div>
 
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -49,16 +54,13 @@ export function TabRail({ tabs, activeTab, onTabChange }: TabRailProps) {
             onClick={() => onTabChange(tab.id)}
             className={[
               // min-w-0 lets labels truncate instead of overflowing the strip.
-              "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 py-2.5",
-              "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-              "lg:flex-none",
-              selected
-                ? "bg-accent-strong text-white shadow-card"
-                : "text-ink-secondary hover:bg-accent-soft hover:text-accent-strong",
+              "pixel pixel-sm pixel-btn pixel-focus flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 px-1 py-3",
+              "transition-transform duration-75 lg:flex-none",
+              selected ? "pixel-magenta pixel-pressed text-white" : "pixel-white text-ink",
             ].join(" ")}
           >
-            <Icon size={20} aria-hidden="true" className="shrink-0" />
-            <span className="w-full truncate text-center text-[11px] font-medium leading-tight">
+            <Icon size={20} aria-hidden="true" className="shrink-0" strokeWidth={2.75} />
+            <span className="w-full truncate text-center font-pixel text-[9px] uppercase leading-tight">
               {tab.label}
             </span>
           </button>

@@ -6,6 +6,9 @@ import { useId } from "react";
  * Provisional primitive. The visual treatment lives here plus the `.fp-range`
  * block in app/globals.css — swapping in a different slider means editing
  * those two places, never a calculator tab.
+ *
+ * The track reads as a segmented energy bar; the current value sits above it
+ * in the score face so it scans as a readout rather than a caption.
  */
 interface SliderProps {
   label: string;
@@ -36,11 +39,14 @@ export function Slider({
 
   return (
     <div className={disabled ? "opacity-55" : undefined}>
-      <div className="flex items-baseline justify-between gap-3">
-        <label htmlFor={id} className="text-sm font-medium text-ink">
+      <div className="flex items-center justify-between gap-3">
+        <label
+          htmlFor={id}
+          className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-ink"
+        >
           {label}
         </label>
-        <span className="text-sm font-semibold tabular-nums text-accent-strong">
+        <span className="pixel pixel-sm pixel-flat pixel-gold shrink-0 px-2 py-0.5 font-score text-lg leading-none tabular-nums text-ink">
           {formatValue(value)}
         </span>
       </div>
@@ -48,7 +54,7 @@ export function Slider({
       <input
         id={id}
         type="range"
-        className="fp-range mt-2"
+        className="fp-range mt-2.5"
         style={{ "--fp-pct": `${pct}%` } as React.CSSProperties}
         min={min}
         max={max}
@@ -59,12 +65,12 @@ export function Slider({
         aria-valuetext={formatValue(value)}
       />
 
-      <div className="flex justify-between text-xs tabular-nums text-ink-muted">
+      <div className="mt-1 flex justify-between font-score text-sm leading-none tabular-nums text-ink-muted">
         <span>{formatValue(min)}</span>
         <span>{formatValue(max)}</span>
       </div>
 
-      {hint ? <p className="mt-1.5 text-xs text-ink-muted">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs leading-snug text-ink-muted">{hint}</p> : null}
     </div>
   );
 }

@@ -2,9 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   FinPath AI — 8-bit arcade skin
+   ==========================================================================
+
+   Everything visual lives in two places: the tokens in tailwind.config.ts and
+   the pixel chrome below. Components compose `.pixel` + a tone class and never
+   hand-roll a border, a shadow or a corner.
+   ========================================================================== */
+
 :root {
-  color: #0f2033;
-  background: #f4f6fa;
+  color: #241b3b;
+  background: #78e0d1;
 }
 
 * {
@@ -14,9 +23,30 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f4f6fa;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #241b3b;
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
+
+  /*
+   * Mint ground with an 8px checkerboard. It reads as pixel graph paper behind
+   * the panels and keeps the large flat areas from looking like dead space.
+   */
+  background-color: #78e0d1;
+  background-image:
+    linear-gradient(
+      45deg,
+      rgba(36, 27, 59, 0.045) 25%,
+      transparent 25% 75%,
+      rgba(36, 27, 59, 0.045) 75%
+    ),
+    linear-gradient(
+      45deg,
+      rgba(36, 27, 59, 0.045) 25%,
+      transparent 25% 75%,
+      rgba(36, 27, 59, 0.045) 75%
+    );
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
 }
 
 button,
@@ -25,17 +55,212 @@ select {
   font: inherit;
 }
 
-/*
- * Range input.
- * The filled portion is driven by the --fp-pct custom property, which
- * components/ui/Slider.tsx sets inline. Restyling the slider means editing
- * this block plus that one component — nothing in the calculator tabs.
- */
+/* --------------------------------------------------------------------------
+   Pixel frame
+   --------------------------------------------------------------------------
+
+   `.pixel` draws a stepped-corner panel with a hard offset shadow using only
+   pseudo-elements, so the element itself stays free of clip-path — a clip on
+   the element would also swallow the shadow and any focus outline.
+
+     ::before  the drop shadow, same silhouette, offset down-right
+     ::after   the face: fill + a `--pixel-u` thick inset outline
+     content   paints above both
+
+   Corners are notched by exactly one `--pixel-u`, which is also the outline
+   width, so the step reads as a single fat pixel.
+   -------------------------------------------------------------------------- */
+.pixel {
+  --pixel-u: 4px;
+  --pixel-drop: 6px;
+  --pixel-fill: #ffffff;
+  --pixel-hi: #ffffff;
+  --pixel-lo: #e7e2f2;
+  --pixel-line: #241b3b;
+  --pixel-shadow: #241b3b;
+
+  --pixel-clip: polygon(
+    var(--pixel-u) 0,
+    calc(100% - var(--pixel-u)) 0,
+    calc(100% - var(--pixel-u)) var(--pixel-u),
+    100% var(--pixel-u),
+    100% calc(100% - var(--pixel-u)),
+    calc(100% - var(--pixel-u)) calc(100% - var(--pixel-u)),
+    calc(100% - var(--pixel-u)) 100%,
+    var(--pixel-u) 100%,
+    var(--pixel-u) calc(100% - var(--pixel-u)),
+    0 calc(100% - var(--pixel-u)),
+    0 var(--pixel-u),
+    var(--pixel-u) var(--pixel-u)
+  );
+
+  position: relative;
+  /* Creates the stacking context the negative-z pseudo-elements sit inside. */
+  z-index: 0;
+  border-radius: 0;
+}
+
+.pixel::before,
+.pixel::after {
+  content: "";
+  position: absolute;
+  clip-path: var(--pixel-clip);
+  pointer-events: none;
+}
+
+.pixel::before {
+  inset: var(--pixel-drop) calc(-1 * var(--pixel-drop)) calc(-1 * var(--pixel-drop)) var(--pixel-drop);
+  background: var(--pixel-shadow);
+  z-index: -2;
+}
+
+.pixel::after {
+  inset: 0;
+  background: var(--pixel-fill);
+  box-shadow: inset 0 0 0 var(--pixel-u) var(--pixel-line);
+  z-index: -1;
+}
+
+/* Smaller chrome for controls and chips. */
+.pixel-sm {
+  --pixel-u: 3px;
+  --pixel-drop: 4px;
+}
+
+/* Flat variant: keeps the notched outline, drops the shadow. For panels
+   nested inside another panel, where a second shadow just reads as noise. */
+.pixel-flat::before {
+  content: none;
+}
+
+/* --------------------------------------------------------------------------
+   Tones
+   -------------------------------------------------------------------------- */
+.pixel-white {
+  --pixel-fill: #ffffff;
+  --pixel-hi: #ffffff;
+  --pixel-lo: #e7e2f2;
+}
+
+.pixel-cream {
+  --pixel-fill: #fff6e9;
+  --pixel-hi: #ffffff;
+  --pixel-lo: #f0e4d2;
+}
+
+.pixel-magenta {
+  --pixel-fill: #c22986;
+  --pixel-hi: #e0369e;
+  --pixel-lo: #8f1a61;
+}
+
+.pixel-cyan {
+  --pixel-fill: #2cc0ee;
+  --pixel-hi: #7fdcf7;
+  --pixel-lo: #1596c4;
+}
+
+.pixel-lime {
+  --pixel-fill: #4bc94b;
+  --pixel-hi: #8be47f;
+  --pixel-lo: #2e9b36;
+}
+
+.pixel-gold {
+  --pixel-fill: #ffc53d;
+  --pixel-hi: #ffe08a;
+  --pixel-lo: #d99400;
+}
+
+/* The dark readout panel — an arcade score display. */
+.pixel-screen {
+  --pixel-fill: #2e2450;
+  --pixel-hi: #3d3168;
+  --pixel-lo: #1b1430;
+}
+
+/* --------------------------------------------------------------------------
+   Pixel button
+   --------------------------------------------------------------------------
+   Three horizontal bands (highlight / body / shade) inside the outline give
+   the moulded-plastic look; pressing drops the button onto its own shadow.
+   -------------------------------------------------------------------------- */
+.pixel-btn::after {
+  background: linear-gradient(
+    180deg,
+    var(--pixel-hi) 0 calc(var(--pixel-u) * 3),
+    var(--pixel-fill) calc(var(--pixel-u) * 3) calc(100% - var(--pixel-u) * 2),
+    var(--pixel-lo) calc(100% - var(--pixel-u) * 2) 100%
+  );
+}
+
+/* `.pixel-pressed` is excluded from both: an already-pressed control must not
+   pop back up on hover, and it has nowhere further to travel on click. */
+.pixel-btn:not(:disabled):not(.pixel-pressed):hover {
+  transform: translate(1px, 1px);
+}
+
+.pixel-btn:not(:disabled):not(.pixel-pressed):active {
+  transform: translate(var(--pixel-drop), var(--pixel-drop));
+}
+
+.pixel-btn:not(:disabled):not(.pixel-pressed):active::before {
+  opacity: 0;
+}
+
+.pixel-btn:disabled {
+  filter: saturate(0.35);
+}
+
+/* Already-selected controls render permanently pressed. */
+.pixel-pressed {
+  transform: translate(var(--pixel-drop), var(--pixel-drop));
+}
+
+.pixel-pressed::before {
+  opacity: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Focus
+   --------------------------------------------------------------------------
+   An outline rather than a ring: box-shadow rings would be hidden behind the
+   `::after` face, and an outline is not affected by the pseudo-element clip.
+   -------------------------------------------------------------------------- */
+.pixel-focus:focus-visible {
+  outline: 3px solid #241b3b;
+  outline-offset: 3px;
+}
+
+/* Hard offset text shadow for headings sitting directly on the mint ground —
+   the arcade marquee treatment. Only legible on the page background, never on
+   a white panel, where the shadow would disappear. */
+.pixel-title {
+  text-shadow: 3px 3px 0 #ffffff;
+}
+
+/* CRT scanlines, for the dark readout panels. */
+.pixel-scanlines {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* --------------------------------------------------------------------------
+   Range input
+   --------------------------------------------------------------------------
+   Styled as a segmented energy bar: the cell dividers are a repeating gradient
+   painted over the fill, which is driven by the --fp-pct custom property that
+   components/ui/Slider.tsx sets inline. Restyling the slider means editing
+   this block plus that one component — nothing in the calculator tabs.
+   -------------------------------------------------------------------------- */
 .fp-range {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 22px;
+  height: 24px;
   background: transparent;
   cursor: pointer;
 }
@@ -45,112 +270,119 @@ select {
 }
 
 .fp-range::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(
-    to right,
-    #2a78d6 0%,
-    #2a78d6 var(--fp-pct, 50%),
-    #e3e8f0 var(--fp-pct, 50%),
-    #e3e8f0 100%
-  );
+  height: 18px;
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 9px, #241b3b 9px 12px),
+    linear-gradient(
+      90deg,
+      #e0369e 0 var(--fp-pct, 50%),
+      #ffffff var(--fp-pct, 50%) 100%
+    );
+  box-shadow: inset 0 0 0 3px #241b3b;
 }
 
 .fp-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 18px;
-  height: 18px;
-  margin-top: -6px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 3px solid #1c5cab;
-  box-shadow: 0 1px 3px rgba(15, 32, 51, 0.28);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-
-.fp-range:hover::-webkit-slider-thumb {
-  transform: scale(1.08);
+  height: 26px;
+  margin-top: -4px;
+  border-radius: 0;
+  background: linear-gradient(180deg, #ffe08a 0 6px, #ffc53d 6px 20px, #d99400 20px 26px);
+  box-shadow: inset 0 0 0 3px #241b3b;
 }
 
 .fp-range:active::-webkit-slider-thumb {
-  transform: scale(1.14);
+  background: linear-gradient(180deg, #ffe08a 0 6px, #e0369e 6px 20px, #8f1a61 20px 26px);
 }
 
 .fp-range:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 4px rgba(42, 120, 214, 0.3);
+  outline: 3px solid #241b3b;
+  outline-offset: 2px;
 }
 
 .fp-range::-moz-range-track {
-  height: 6px;
-  border-radius: 999px;
-  background: #e3e8f0;
+  height: 18px;
+  border-radius: 0;
+  background: repeating-linear-gradient(90deg, #ffffff 0 9px, #241b3b 9px 12px);
+  box-shadow: inset 0 0 0 3px #241b3b;
 }
 
 .fp-range::-moz-range-progress {
-  height: 6px;
-  border-radius: 999px;
-  background: #2a78d6;
+  height: 18px;
+  border-radius: 0;
+  background: repeating-linear-gradient(90deg, #e0369e 0 9px, #241b3b 9px 12px);
 }
 
 .fp-range::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 3px solid #1c5cab;
-  box-shadow: 0 1px 3px rgba(15, 32, 51, 0.28);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-
-.fp-range:hover::-moz-range-thumb {
-  transform: scale(1.08);
+  width: 12px;
+  height: 26px;
+  border: 3px solid #241b3b;
+  border-radius: 0;
+  background: #ffc53d;
 }
 
 .fp-range:focus-visible::-moz-range-thumb {
-  box-shadow: 0 0 0 4px rgba(42, 120, 214, 0.3);
+  outline: 3px solid #241b3b;
+  outline-offset: 2px;
 }
 
-/* Shimmer used by the AI loading state. */
+/* --------------------------------------------------------------------------
+   Motion — stepped, never eased, so it reads as animation cels
+   -------------------------------------------------------------------------- */
 @keyframes fp-shimmer {
-  0% {
-    opacity: 0.45;
+  0%,
+  49% {
+    opacity: 0.4;
   }
-  50% {
-    opacity: 1;
-  }
+  50%,
   100% {
-    opacity: 0.45;
+    opacity: 1;
   }
 }
 
 .fp-shimmer {
-  animation: fp-shimmer 1.4s ease-in-out infinite;
+  animation: fp-shimmer 0.9s steps(1, end) infinite;
 }
 
-/* Idle float for the AI mascot. */
 @keyframes fp-float {
   0%,
   100% {
     transform: translateY(0);
   }
-  50% {
-    transform: translateY(-6px);
+  33% {
+    transform: translateY(-4px);
+  }
+  66% {
+    transform: translateY(-8px);
   }
 }
 
 .fp-float {
-  animation: fp-float 4s ease-in-out infinite;
+  animation: fp-float 1.6s steps(1, end) infinite;
+}
+
+/* Four-frame spin for the "re-analyse" icon — a smooth spin fights the grid. */
+@keyframes fp-step-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fp-step-spin {
+  animation: fp-step-spin 1s steps(8, end) infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .fp-shimmer,
-  .fp-float {
+  .fp-float,
+  .fp-step-spin {
     animation: none;
   }
 
-  .fp-range::-webkit-slider-thumb,
-  .fp-range::-moz-range-thumb {
-    transition: none;
+  .pixel-btn:not(:disabled):hover,
+  .pixel-btn:not(:disabled):active {
+    transform: none;
   }
 }
