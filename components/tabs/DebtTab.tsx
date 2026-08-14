@@ -11,7 +11,7 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Slider } from "@/components/ui/Slider";
 import { buildDebtView, debtSeries } from "@/lib/calculators";
 import { formatCLP, formatCompactCLP } from "@/lib/format";
-import type { AIInsight, AIStatus, DebtState, DebtStrategy } from "@/lib/types";
+import type { AIChatMessage, AIInsight, AIStatus, DebtState, DebtStrategy } from "@/lib/types";
 
 interface DebtTabProps {
   state: DebtState;
@@ -19,6 +19,7 @@ interface DebtTabProps {
   aiStatus: AIStatus;
   insight: AIInsight;
   onAnalyze: () => void;
+  onSendMessage: (message: string, history: AIChatMessage[]) => Promise<string>;
 }
 
 const STRATEGIES = [
@@ -26,7 +27,14 @@ const STRATEGIES = [
   { value: "avalanche" as DebtStrategy, label: "Avalancha", hint: "Mayor tasa primero" },
 ];
 
-export function DebtTab({ state, onChange, aiStatus, insight, onAnalyze }: DebtTabProps) {
+export function DebtTab({
+  state,
+  onChange,
+  aiStatus,
+  insight,
+  onAnalyze,
+  onSendMessage,
+}: DebtTabProps) {
   // Both strategies are simulated per state change; the toggle only picks which
   // one is on screen, and the other one supplies the comparison hints.
   const view = useMemo(() => buildDebtView(state), [state]);
@@ -94,7 +102,14 @@ export function DebtTab({ state, onChange, aiStatus, insight, onAnalyze }: DebtT
           ))}
         </MetricPanel>
       }
-      aiSection={<AISection status={aiStatus} insight={insight} onAnalyze={onAnalyze} />}
+      aiSection={
+        <AISection
+          status={aiStatus}
+          insight={insight}
+          onAnalyze={onAnalyze}
+          onSendMessage={onSendMessage}
+        />
+      }
     />
   );
 }

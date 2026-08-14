@@ -10,7 +10,7 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Slider } from "@/components/ui/Slider";
 import { buildCreditView, creditSeries } from "@/lib/calculators";
 import { formatCLP, formatCompactCLP, formatPercent } from "@/lib/format";
-import type { AIInsight, AIStatus, CreditState, PaymentMode } from "@/lib/types";
+import type { AIChatMessage, AIInsight, AIStatus, CreditState, PaymentMode } from "@/lib/types";
 
 interface CreditTabProps {
   state: CreditState;
@@ -18,6 +18,7 @@ interface CreditTabProps {
   aiStatus: AIStatus;
   insight: AIInsight;
   onAnalyze: () => void;
+  onSendMessage: (message: string, history: AIChatMessage[]) => Promise<string>;
 }
 
 const PAYMENT_MODES = [
@@ -25,7 +26,14 @@ const PAYMENT_MODES = [
   { value: "accelerated" as PaymentMode, label: "Pago Acelerado" },
 ];
 
-export function CreditTab({ state, onChange, aiStatus, insight, onAnalyze }: CreditTabProps) {
+export function CreditTab({
+  state,
+  onChange,
+  aiStatus,
+  insight,
+  onAnalyze,
+  onSendMessage,
+}: CreditTabProps) {
   // One amortisation run per state change feeds both the chart and the cards.
   const view = useMemo(() => buildCreditView(state), [state]);
 
@@ -102,7 +110,14 @@ export function CreditTab({ state, onChange, aiStatus, insight, onAnalyze }: Cre
           ))}
         </MetricPanel>
       }
-      aiSection={<AISection status={aiStatus} insight={insight} onAnalyze={onAnalyze} />}
+      aiSection={
+        <AISection
+          status={aiStatus}
+          insight={insight}
+          onAnalyze={onAnalyze}
+          onSendMessage={onSendMessage}
+        />
+      }
     />
   );
 }
