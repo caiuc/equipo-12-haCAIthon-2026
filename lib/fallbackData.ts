@@ -3,4 +3,5 @@ export const GEMINI_FALLBACK_RESPONSE = {
   diagnostico: null,
   consejoClave: null,
   roadmap: [],
+  recursos: [],
 };

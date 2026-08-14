@@ -8,15 +8,40 @@ type RoadmapStep = {
   descripcion: string;
 };
 
+type Resource = {
+  titulo: string;
+  url: string;
+  descripcion: string;
+};
+
 export type GeminiResponse = {
   text: string;
   diagnostico: string | null;
   consejoClave: string | null;
   roadmap: RoadmapStep[];
+  recursos: Resource[];
 };
 
 function asOptionalText(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function parseResources(value: unknown): Resource[] | null {
+  if (!Array.isArray(value)) return null;
+
+  const resources = value.map((resource): Resource | null => {
+    if (!resource || typeof resource !== "object") return null;
+    const item = resource as Record<string, unknown>;
+    const titulo = asOptionalText(item.titulo);
+    const url = asOptionalText(item.url);
+    const descripcion = asOptionalText(item.descripcion);
+
+    return titulo && url && descripcion ? { titulo, url, descripcion } : null;
+  });
+
+  return resources.some((resource) => resource === null)
+    ? null
+    : (resources as Resource[]);
 }
 
 function parseGeminiResponse(value: string): GeminiResponse | null {
@@ -26,7 +51,8 @@ function parseGeminiResponse(value: string): GeminiResponse | null {
 
     const response = parsed as Record<string, unknown>;
     const text = asOptionalText(response.text);
-    if (!text || !Array.isArray(response.roadmap)) return null;
+    const recursos = parseResources(response.recursos);
+    if (!text || !Array.isArray(response.roadmap) || !recursos) return null;
 
     const roadmap = response.roadmap.map((step): RoadmapStep | null => {
       if (!step || typeof step !== "object") return null;
@@ -44,6 +70,7 @@ function parseGeminiResponse(value: string): GeminiResponse | null {
       diagnostico: asOptionalText(response.diagnostico),
       consejoClave: asOptionalText(response.consejoClave),
       roadmap: roadmap as RoadmapStep[],
+      recursos,
     };
   } catch {
     return null;
