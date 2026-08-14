@@ -1,25 +1,38 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
-import { SYSTEM_PROMPT } from "@/lib/constants";
+import { generateStudentResponse } from "@/lib/geminiClient";
 
 export async function POST(req: Request) {
+  let body: unknown;
+
   try {
-    const { message } = await req.json();
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { error: "El cuerpo de la solicitud debe ser JSON válido." },
+      { status: 400 },
+    );
+  }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: message,
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-      },
-    });
+  const message =
+    body && typeof body === "object" && "message" in body
+      ? (body as { message?: unknown }).message
+      : undefined;
 
-    return NextResponse.json({ text: response.text });
+  if (typeof message !== "string" || !message.trim()) {
+    return NextResponse.json(
+      { error: "Debes enviar una pregunta en el campo message." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const text = await generateStudentResponse(message.trim());
+
+    return NextResponse.json({ text });
   } catch (error) {
     return NextResponse.json(
-      { error: "Error al procesar la solicitud" },
-      { status: 500 },
+      { error: "No fue posible generar una respuesta en este momento." },
+      { status: 502 },
     );
   }
 }
