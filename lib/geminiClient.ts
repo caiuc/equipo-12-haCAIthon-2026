@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { SYSTEM_PROMPT } from "@/lib/constants";
 import { GEMINI_FALLBACK_RESPONSE } from "@/lib/fallbackData";
+import { SYSTEM_REMINDER } from "@/lib/system-reminder";
 
 type RoadmapStep = {
   paso: number;
@@ -93,7 +94,7 @@ export async function generateStudentResponse(
       model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
       contents,
       config: {
-        systemInstruction: SYSTEM_PROMPT,
+        systemInstruction: `${SYSTEM_PROMPT}\n\n${SYSTEM_REMINDER}`,
         responseMimeType: "application/json",
       },
     });
