@@ -28,7 +28,7 @@ export function AISection({ status, insight, onAnalyze, mascot }: AISectionProps
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:gap-6">
         {/* Character column: the section's visual anchor and its one action. */}
-        <div className="flex shrink-0 flex-row items-center gap-4 lg:w-[170px] lg:flex-col lg:gap-3">
+        <div className="flex shrink-0 flex-row items-center gap-4 lg:w-[170px] lg:flex-col lg:justify-center lg:gap-3">
           {mascot ?? <Mascot status={status} />}
 
           <Button onClick={onAnalyze} disabled={loading} size="sm" className="lg:w-full">
@@ -48,22 +48,27 @@ export function AISection({ status, insight, onAnalyze, mascot }: AISectionProps
         <div className="min-w-0 flex-1">
           <DiagnosisCard status={status} diagnosis={insight.diagnosis} />
 
-          <h3 className="mb-2 mt-4 text-sm font-semibold text-ink">Ruta sugerida</h3>
-          <ol className="m-0 grid list-none gap-2 p-0">
-            {steps.map((step, index) => (
-              <RoadmapCard
-                key={step.title || index}
-                index={index}
-                title={step.title}
-                detail={step.detail}
-                loading={loading}
-              />
-            ))}
-          </ol>
+          {/* The roadmap comes back with the analysis, so it has nothing to show until one runs. */}
+          {status !== "idle" && (
+            <>
+              <h3 className="mb-2 mt-4 text-sm font-semibold text-ink">Ruta sugerida</h3>
+              <ol className="m-0 grid list-none gap-2 p-0">
+                {steps.map((step, index) => (
+                  <RoadmapCard
+                    key={step.title || index}
+                    index={index}
+                    title={step.title}
+                    detail={step.detail}
+                    loading={loading}
+                  />
+                ))}
+              </ol>
+            </>
+          )}
         </div>
       </div>
 
-      <p className="mt-4 text-xs leading-relaxed text-ink-muted">
+      <p className="mt-4 text-center text-xs leading-relaxed text-ink-muted">
         Contenido educativo generado automáticamente. No constituye asesoría financiera ni una
         recomendación de inversión; confirma cualquier decisión con tu institución financiera.
       </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Landmark, LineChart, TrendingUp, type LucideIcon } from "lucide-react";
+import { CreditCard, Landmark, TrendingUp, type LucideIcon } from "lucide-react";
 
 import type { ActiveTab } from "@/lib/types";
 
@@ -33,12 +33,8 @@ export function TabRail({ tabs, activeTab, onTabChange }: TabRailProps) {
       aria-label="Calculadoras"
       className="flex shrink-0 items-center gap-1 border-b border-line bg-surface px-2 py-2 lg:h-full lg:w-[92px] lg:flex-col lg:items-stretch lg:gap-1 lg:border-b-0 lg:border-r lg:py-3"
     >
-      <span
-        aria-hidden="true"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-strong text-white lg:mx-auto lg:mb-3"
-        title="FinPath AI"
-      >
-        <LineChart size={18} />
+      <span className="shrink-0 px-2 text-sm font-semibold leading-tight text-ink lg:mb-3 lg:px-0 lg:text-center lg:text-xs">
+        FinPath AI
       </span>
 
       {tabs.map((tab) => {

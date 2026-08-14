@@ -1,9 +1,9 @@
 "use client";
 
 import { AISection } from "@/components/AISection";
-import { CalculatorLayout, MetricRow } from "@/components/CalculatorLayout";
+import { CalculatorLayout } from "@/components/CalculatorLayout";
 import { ChartViewer } from "@/components/ui/ChartViewer";
-import { MetricCard } from "@/components/ui/MetricCard";
+import { MetricCard, MetricPanel } from "@/components/ui/MetricCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Slider } from "@/components/ui/Slider";
 import { buildCreditChartData, buildCreditMetrics, creditSeries } from "@/lib/mockData";
@@ -89,7 +89,7 @@ export function CreditTab({ state, onChange, aiStatus, insight, onAnalyze }: Cre
         />
       }
       metrics={
-        <MetricRow>
+        <MetricPanel title="Resultado">
           {metrics.map((metric) => (
             <MetricCard
               key={metric.id}
@@ -98,7 +98,7 @@ export function CreditTab({ state, onChange, aiStatus, insight, onAnalyze }: Cre
               hint={metric.hint}
             />
           ))}
-        </MetricRow>
+        </MetricPanel>
       }
       aiSection={<AISection status={aiStatus} insight={insight} onAnalyze={onAnalyze} />}
     />
