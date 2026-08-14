@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { RefreshCw, Sparkles } from "lucide-react";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { RefreshCw, Send, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { DiagnosisCard } from "@/components/ui/DiagnosisCard";
@@ -20,6 +20,27 @@ interface AISectionProps {
 export function AISection({ status, insight, onAnalyze, mascot }: AISectionProps) {
   const loading = status === "loading";
   const steps = loading ? PLACEHOLDER_STEPS : insight.roadmap;
+  const [message, setMessage] = useState("");
+  const [sentMessage, setSentMessage] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+
+  function handleAnalyze() {
+    setMessage("");
+    setSentMessage(null);
+    setSending(false);
+    onAnalyze();
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || status === "idle" || loading || sending) return;
+
+    setSentMessage(trimmedMessage);
+    setMessage("");
+    setSending(true);
+  }
 
   return (
     <section aria-label="Análisis con IA" className="pixel pixel-cream p-5">
@@ -28,7 +49,7 @@ export function AISection({ status, insight, onAnalyze, mascot }: AISectionProps
         <div className="flex shrink-0 flex-row items-center gap-5 lg:w-[180px] lg:flex-col lg:justify-center lg:gap-4">
           {mascot ?? <Mascot status={status} />}
 
-          <Button onClick={onAnalyze} disabled={loading} size="sm" className="lg:w-full">
+          <Button onClick={handleAnalyze} disabled={loading} size="sm" className="lg:w-full">
             {status === "idle" ? (
               <Sparkles size={13} aria-hidden="true" strokeWidth={3} />
             ) : (
