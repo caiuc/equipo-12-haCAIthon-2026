@@ -1,0 +1,2 @@
+// Gemini route placeholder.
+export {};
