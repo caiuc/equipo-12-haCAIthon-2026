@@ -1,45 +1,70 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { DiagnosisCard } from "@/components/ui/DiagnosisCard";
 import { Mascot } from "@/components/ui/Mascot";
 import { RoadmapCard } from "@/components/ui/RoadmapCard";
-import type { AIInsight, AIStatus } from "@/lib/types";
+import type { AIChatMessage, AIInsight, AIStatus } from "@/lib/types";
 
 interface AISectionProps {
   status: AIStatus;
   insight: AIInsight;
   onAnalyze: () => void;
+  onSendMessage: (message: string, history: AIChatMessage[]) => Promise<string>;
   /** Replaces the default character; the section lays out fine without one. */
   mascot?: ReactNode;
 }
 
-export function AISection({ status, insight, onAnalyze, mascot }: AISectionProps) {
+export function AISection({ status, insight, onAnalyze, onSendMessage, mascot }: AISectionProps) {
   const loading = status === "loading";
   const steps = loading ? PLACEHOLDER_STEPS : insight.roadmap;
   const [message, setMessage] = useState("");
-  const [sentMessage, setSentMessage] = useState<string | null>(null);
+  const [messages, setMessages] = useState<AIChatMessage[]>([]);
   const [sending, setSending] = useState(false);
+  const messagesRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = messagesRef.current;
+    if (!container) return;
+
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [messages, sending]);
 
   function handleAnalyze() {
     setMessage("");
-    setSentMessage(null);
+    setMessages([]);
     setSending(false);
     onAnalyze();
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const trimmedMessage = message.trim();
     if (!trimmedMessage || status === "idle" || loading || sending) return;
 
-    setSentMessage(trimmedMessage);
+    const history = messages;
+    setMessages((current) => [...current, { role: "user", text: trimmedMessage }]);
     setMessage("");
     setSending(true);
+
+    try {
+      const answer = await onSendMessage(trimmedMessage, history);
+      setMessages((current) => [...current, { role: "assistant", text: answer }]);
+    } catch {
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          text: "No pude responder en este momento. Inténtalo nuevamente.",
+        },
+      ]);
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -103,7 +128,11 @@ export function AISection({ status, insight, onAnalyze, mascot }: AISectionProps
               </p>
             </div>
 
-            <div className="flex flex-1 flex-col justify-end gap-4 py-5" aria-live="polite">
+            <div
+              ref={messagesRef}
+              className="flex max-h-[380px] min-h-[170px] flex-1 flex-col justify-end gap-4 overflow-y-auto overscroll-contain py-5 pr-2"
+              aria-live="polite"
+            >
               {status === "idle" ? (
                 <p className="my-auto text-center text-sm font-bold leading-relaxed text-ink-muted">
                   Analiza tu escenario para habilitar el chat.
@@ -112,11 +141,21 @@ export function AISection({ status, insight, onAnalyze, mascot }: AISectionProps
                 <p className="fp-shimmer my-auto text-center text-sm font-bold leading-relaxed text-ink-muted">
                   El chat estará disponible cuando termine el análisis.
                 </p>
-              ) : sentMessage ? (
+              ) : messages.length > 0 ? (
                 <>
-                  <p className="ml-auto max-w-[90%] border-4 border-line bg-accent-strong px-3 py-2 text-sm font-bold leading-relaxed text-white">
-                    {sentMessage}
-                  </p>
+                  {messages.map((chatMessage, index) => (
+                    <p
+                      key={`${chatMessage.role}-${index}`}
+                      className={[
+                        "max-w-[90%] border-4 border-line px-3 py-2 text-sm font-bold leading-relaxed",
+                        chatMessage.role === "user"
+                          ? "ml-auto bg-accent-strong text-white"
+                          : "mr-auto bg-surface-muted text-ink-secondary",
+                      ].join(" ")}
+                    >
+                      {chatMessage.text}
+                    </p>
+                  ))}
                   {sending ? (
                     <div className="mr-auto flex items-center gap-3 border-4 border-line bg-surface-muted px-3 py-2 text-sm font-bold text-ink-secondary">
                       <span className="fp-shimmer flex gap-1" aria-hidden="true">

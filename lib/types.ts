@@ -55,6 +55,11 @@ export interface AIInsight {
   roadmap: RoadmapStep[];
 }
 
+export interface AIChatMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
 export interface Preset {
   id: string;
   label: string;

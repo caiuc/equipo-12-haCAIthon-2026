@@ -12,7 +12,7 @@ import {
   investmentSeries,
 } from "@/lib/mockData";
 import { formatCLP, formatCompactCLP, formatYears } from "@/lib/format";
-import type { AIInsight, AIStatus, InvestmentState, ReturnProfile } from "@/lib/types";
+import type { AIChatMessage, AIInsight, AIStatus, InvestmentState, ReturnProfile } from "@/lib/types";
 
 interface InvestmentTabProps {
   state: InvestmentState;
@@ -20,6 +20,7 @@ interface InvestmentTabProps {
   aiStatus: AIStatus;
   insight: AIInsight;
   onAnalyze: () => void;
+  onSendMessage: (message: string, history: AIChatMessage[]) => Promise<string>;
 }
 
 const RETURN_PROFILES = [
@@ -34,6 +35,7 @@ export function InvestmentTab({
   aiStatus,
   insight,
   onAnalyze,
+  onSendMessage,
 }: InvestmentTabProps) {
   // Swap these two lines for the real engine output; nothing below changes.
   const chartData = buildInvestmentChartData(state);
@@ -98,7 +100,14 @@ export function InvestmentTab({
           ))}
         </MetricPanel>
       }
-      aiSection={<AISection status={aiStatus} insight={insight} onAnalyze={onAnalyze} />}
+      aiSection={
+        <AISection
+          status={aiStatus}
+          insight={insight}
+          onAnalyze={onAnalyze}
+          onSendMessage={onSendMessage}
+        />
+      }
     />
   );
 }
