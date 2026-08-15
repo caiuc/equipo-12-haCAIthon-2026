@@ -111,15 +111,25 @@ function describeFinancialState(
     return JSON.stringify({
       módulo: "Plan de deudas",
       ingresoMensualCLP: debt.income,
-      deudaTotalCLP: debt.totalDebt,
+      deudaTotalCLP: debt.debts.reduce((total, item) => total + item.balance, 0),
       capacidadPagoMensualCLP: debt.paymentCapacity,
       estrategia: debt.strategy === "snowball" ? "bola de nieve" : "avalancha",
+      deudas: debt.debts.map((item) => ({
+        nombre: item.name,
+        saldoCLP: item.balance,
+        tasaInterésMensualPorcentaje: item.monthlyInterestRate,
+        pagoMínimoCLP: item.minimumPayment,
+      })),
     });
   }
 
   return JSON.stringify({
     módulo: "Ahorro e inversión",
-    ahorroMensualCLP: investment.monthlySavings,
+    ingresoMensualCLP: investment.monthlyNetIncome,
+    porcentajeDestinadoAInversión: investment.investmentAllocationPercent,
+    ahorroMensualCLP: Math.round(
+      investment.monthlyNetIncome * (investment.investmentAllocationPercent / 100),
+    ),
     horizonteAños: investment.years,
     rendimientoAnualSimuladoPorcentaje: investment.returnProfile,
   });

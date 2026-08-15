@@ -22,7 +22,7 @@ export function AISection({ status, insight, onAnalyze, onSendMessage, mascot }:
   const loading = status === "loading";
   const steps = loading ? PLACEHOLDER_STEPS : insight.roadmap;
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<AIChatMessage[]>([]);
+  const [messages, setMessages] = useState<AIChatMessage[]>([STARTING_MESSAGE]);
   const [sending, setSending] = useState(false);
   const messagesRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +35,7 @@ export function AISection({ status, insight, onAnalyze, onSendMessage, mascot }:
 
   function handleAnalyze() {
     setMessage("");
-    setMessages([]);
+    setMessages([STARTING_MESSAGE]);
     setSending(false);
     onAnalyze();
   }
@@ -133,6 +133,20 @@ export function AISection({ status, insight, onAnalyze, onSendMessage, mascot }:
               className="flex max-h-[380px] min-h-[170px] flex-1 flex-col justify-end gap-4 overflow-y-auto overscroll-contain py-5 pr-2"
               aria-live="polite"
             >
+              {messages.map((chatMessage, index) => (
+                <p
+                  key={`${chatMessage.role}-${index}`}
+                  className={[
+                    "max-w-[90%] border-4 border-line px-3 py-2 text-sm font-bold leading-relaxed",
+                    chatMessage.role === "user"
+                      ? "ml-auto bg-accent-strong text-white"
+                      : "mr-auto bg-surface-muted text-ink-secondary",
+                  ].join(" ")}
+                >
+                  {chatMessage.text}
+                </p>
+              ))}
+
               {status === "idle" ? (
                 <p className="my-auto text-center text-sm font-bold leading-relaxed text-ink-muted">
                   Analiza tu escenario para habilitar el chat.
@@ -141,36 +155,21 @@ export function AISection({ status, insight, onAnalyze, onSendMessage, mascot }:
                 <p className="fp-shimmer my-auto text-center text-sm font-bold leading-relaxed text-ink-muted">
                   El chat estará disponible cuando termine el análisis.
                 </p>
-              ) : messages.length > 0 ? (
-                <>
-                  {messages.map((chatMessage, index) => (
-                    <p
-                      key={`${chatMessage.role}-${index}`}
-                      className={[
-                        "max-w-[90%] border-4 border-line px-3 py-2 text-sm font-bold leading-relaxed",
-                        chatMessage.role === "user"
-                          ? "ml-auto bg-accent-strong text-white"
-                          : "mr-auto bg-surface-muted text-ink-secondary",
-                      ].join(" ")}
-                    >
-                      {chatMessage.text}
-                    </p>
-                  ))}
-                  {sending ? (
-                    <div className="mr-auto flex items-center gap-3 border-4 border-line bg-surface-muted px-3 py-2 text-sm font-bold text-ink-secondary">
-                      <span className="fp-shimmer flex gap-1" aria-hidden="true">
-                        <span className="h-2 w-2 bg-accent" />
-                        <span className="h-2 w-2 bg-cyan" />
-                        <span className="h-2 w-2 bg-gold" />
-                      </span>
-                      Escribiendo respuesta...
-                    </div>
-                  ) : null}
-                </>
-              ) : (
-                <p className="my-auto text-center text-sm font-bold leading-relaxed text-ink-muted">
+              ) : sending ? (
+                <div className="mr-auto flex items-center gap-3 border-4 border-line bg-surface-muted px-3 py-2 text-sm font-bold text-ink-secondary">
+                  <span className="fp-shimmer flex gap-1" aria-hidden="true">
+                    <span className="h-2 w-2 bg-accent" />
+                    <span className="h-2 w-2 bg-cyan" />
+                    <span className="h-2 w-2 bg-gold" />
+                  </span>
+                  Escribiendo respuesta...
+                </div>
+              ) : messages.length === 1 ? (
+                <p className="text-center text-sm font-bold leading-relaxed text-ink-muted">
                   Pregunta qué paso priorizar o cómo cambiaría tu escenario.
                 </p>
+              ) : (
+                null
               )}
             </div>
 
@@ -217,3 +216,8 @@ const PLACEHOLDER_STEPS = [
   { title: "", detail: "" },
   { title: "", detail: "" },
 ];
+
+const STARTING_MESSAGE: AIChatMessage = {
+  role: "assistant",
+  text: "¡Hola! Soy Finicio AI, tu asistente de educación financiera. Analiza tu escenario y pregúntame lo que quieras sobre tus resultados.",
+};

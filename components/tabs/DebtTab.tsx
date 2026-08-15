@@ -1,12 +1,15 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { AISection } from "@/components/AISection";
 import { CalculatorLayout } from "@/components/CalculatorLayout";
 import { ChartViewer } from "@/components/ui/ChartViewer";
+import { DebtList } from "@/components/ui/DebtList";
 import { MetricCard, MetricPanel } from "@/components/ui/MetricCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Slider } from "@/components/ui/Slider";
-import { buildDebtChartData, buildDebtMetrics, debtSeries } from "@/lib/mockData";
+import { buildDebtView, debtSeries } from "@/lib/calculators";
 import { formatCLP, formatCompactCLP } from "@/lib/format";
 import type { AIChatMessage, AIInsight, AIStatus, DebtState, DebtStrategy } from "@/lib/types";
 
@@ -32,9 +35,9 @@ export function DebtTab({
   onAnalyze,
   onSendMessage,
 }: DebtTabProps) {
-  // Swap these two lines for the real engine output; nothing below changes.
-  const chartData = buildDebtChartData(state);
-  const metrics = buildDebtMetrics(state);
+  // Both strategies are simulated per state change; the toggle only picks which
+  // one is on screen, and the other one supplies the comparison hints.
+  const view = useMemo(() => buildDebtView(state), [state]);
 
   return (
     <CalculatorLayout
@@ -49,16 +52,6 @@ export function DebtTab({
             max={2_000_000}
             step={10_000}
             onChange={(income) => onChange({ income })}
-            formatValue={formatCLP}
-          />
-
-          <Slider
-            label="Deuda Total"
-            value={state.totalDebt}
-            min={200_000}
-            max={5_000_000}
-            step={10_000}
-            onChange={(totalDebt) => onChange({ totalDebt })}
             formatValue={formatCLP}
           />
 
@@ -79,11 +72,13 @@ export function DebtTab({
             value={state.strategy}
             onChange={(strategy) => onChange({ strategy })}
           />
+
+          <DebtList debts={state.debts} onChange={(debts) => onChange({ debts })} />
         </>
       }
       chart={
         <ChartViewer
-          data={chartData}
+          data={view.chartData}
           series={debtSeries}
           xKey="month"
           xLabel="Mes"
@@ -91,12 +86,13 @@ export function DebtTab({
           formatValue={formatCLP}
           formatTick={formatCompactCLP}
           title="Deuda pendiente en el tiempo"
-          subtitle="Valores de ejemplo mientras se conecta el motor de cálculo."
+          subtitle={view.chartSubtitle}
+          notice={view.chartNotice}
         />
       }
       metrics={
         <MetricPanel title="Resultado">
-          {metrics.map((metric) => (
+          {view.metrics.map((metric) => (
             <MetricCard
               key={metric.id}
               label={metric.label}
