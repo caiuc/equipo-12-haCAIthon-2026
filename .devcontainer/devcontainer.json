@@ -1,0 +1,25 @@
+{
+  "name": "FinPath AI · HaCAithon 2026",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "forwardPorts": [
+    3000
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Aplicación",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "postAttachCommand": {
+    "app": "npm run dev -- --hostname 0.0.0.0"
+  },
+  "customizations": {
+    "codespaces": {
+      "openFiles": [
+        "README.md"
+      ]
+    }
+  },
+  "postCreateCommand": "npm install",
+  "//": "Funciona sin clave de Gemini gracias al contenido de respaldo local"
+}
